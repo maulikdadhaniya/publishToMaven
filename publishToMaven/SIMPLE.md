@@ -9,7 +9,7 @@ Copy **`publishToMaven`** into your Android/Kotlin **project root** (next to `se
 1. **Root `build.gradle.kts`** — add:
 
 ```kotlin
-plugins { id("com.vanniktech.maven.publish") version "0.36.0" apply false }
+plugins { id("com.vanniktech.maven.publish") version "0.35.0" apply false }
 apply(from = rootProject.file("publishToMaven/maven-publish-convention.gradle.kts"))
 ```
 
@@ -36,7 +36,7 @@ Same as: `./gradlew publishToMavenLocal`
 | **`mavenCentralUsername`** | Sonatype [Central Portal](https://central.sonatype.com) → account → **Generate User Token**. The **username** field the portal shows (often a long token id). |
 | **`mavenCentralPassword`** | The **password** from that same generated token (not your login password). |
 
-You only need these when **`MAVEN_PUBLISH_MAVEN_CENTRAL=true`** and you run `./gradlew publishToMavenCentral`.
+You need these when you run **`./publishToMaven/publish-central.sh`** (or `publishToMavenCentral` / `publishAndReleaseToMavenCentral` with **`-PSONATYPE_HOST=CENTRAL_PORTAL`**).
 
 ### GPG signing (`signing.keyId`, `signing.password`, `signing.secretKeyRingFile`)
 
@@ -64,13 +64,22 @@ gpg --list-secret-keys --keyid-format LONG
 
 **Publish your public key** to a keyserver (Maven Central requirement): see [Central’s GPG guide](https://central.sonatype.org/publish/requirements/gpg/).
 
+### If signing fails with `Inappropriate ioctl for device`
+
+GnuPG’s pinentry needs a real terminal (or loopback mode).
+
+1. Run publish from **Terminal.app** or **iTerm**, not a minimal/embedded shell, and use **`./publishToMaven/publish-central.sh`** (it sets `GPG_TTY`), or manually: `export GPG_TTY=$(tty)` then `./gradlew …`.
+2. On macOS, use a GUI pinentry: `brew install pinentry-mac`, then in **`~/.gnupg/gpg-agent.conf`** add  
+   `pinentry-program /opt/homebrew/bin/pinentry-mac`  
+   (Intel Homebrew: `/usr/local/bin/pinentry-mac`). Then `gpgconf --kill gpg-agent` and try again.
+3. **Loopback** (passphrase from `signing.password` / secrets file): in **`~/.gnupg/gpg.conf`** add `pinentry-mode loopback`, in **`~/.gnupg/gpg-agent.conf`** add `allow-loopback-pinentry`, then `gpgconf --kill gpg-agent`. Ensure **`signing.password`** in `secrets.properties` matches your key passphrase.
+
 ---
 
 ## Local testing without GPG
 
 Set in **project** `gradle.properties`:
 
-- **`MAVEN_PUBLISH_MAVEN_CENTRAL=false`**
 - **`MAVEN_PUBLISH_SIGNING=false`**
 
 Then try **`./publishToMaven/publish.sh`**. If Gradle still requires signing for your setup, keep signing enabled and configure GPG in **`~/.gradle/gradle.properties`**.

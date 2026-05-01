@@ -7,12 +7,7 @@ Gradle + scripts to publish Android/Kotlin libraries with [Vanniktech Maven Publ
 ## Copy-paste wire-up
 
 1. Place this **`publishToMaven`** folder in your **project root** (next to `settings.gradle.kts`).
-2. In root **`build.gradle.kts`**:
-
-```kotlin
-plugins { id("com.vanniktech.maven.publish") version "0.36.0" apply false }
-apply(from = rootProject.file("publishToMaven/maven-publish-convention.gradle.kts"))
-```
+2. In root **`build.gradle.kts`** — add `id("com.vanniktech.maven.publish") version "0.35.0" apply false` to `plugins { }`, then either paste the `subprojects { ... }` block from **`maven-publish-convention.gradle.kts`** into this file, or use `apply(from = ...)`. **ToastX** inlines that block in root `build.gradle.kts` (see comment there): `apply(from)` plus `plugins { }` can load Vanniktech twice and fail at configure time.
 
 3. Merge **`gradle.properties.example`** into root **`gradle.properties`** and set **`MAVEN_PUBLISH_MODULES`**, group, version.
 4. Run **`./publishToMaven/publish.sh`** or **`./gradlew publishToMavenLocal`**.
@@ -27,3 +22,4 @@ apply(from = rootProject.file("publishToMaven/maven-publish-convention.gradle.kt
 | **`publish.sh`** | Runs Gradle from the parent directory (project root). |
 
 Repo-wide publishing notes: **[../PUBLISHING.md](../PUBLISHING.md)**.
+

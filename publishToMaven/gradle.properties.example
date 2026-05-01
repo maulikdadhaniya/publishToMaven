@@ -5,6 +5,8 @@ MAVEN_PUBLISH_VERSION=1.0.0
 
 # Gradle subproject names to publish (module folder names), comma-separated.
 MAVEN_PUBLISH_MODULES=mylibrary
+# Optional: Maven artifactId if it should differ from the Gradle project name
+# MAVEN_PUBLISH_ARTIFACT_ID=toastx
 
 MAVEN_PUBLISH_POM_NAME=My Library
 MAVEN_PUBLISH_POM_DESCRIPTION=Android library
@@ -20,9 +22,10 @@ MAVEN_PUBLISH_SCM_DEV_CONNECTION=scm:git:ssh://git@github.com/yourusername/yourr
 MAVEN_PUBLISH_INCEPTION_YEAR=2025
 
 MAVEN_PUBLISH_FOLDER_REPO=build/maven-repo
-MAVEN_PUBLISH_MAVEN_CENTRAL=false
-MAVEN_PUBLISH_CENTRAL_AUTO_RELEASE=true
 MAVEN_PUBLISH_SIGNING=true
+
+# Central: use publish-central.sh (or -PSONATYPE_HOST=CENTRAL_PORTAL -PSONATYPE_AUTOMATIC_RELEASE=true).
+# Avoid SONATYPE_* in this file for daily dev unless you need it on every configuration.
 
 # --- Do not put secrets in this project file. Use ~/.gradle/gradle.properties ---
 # How to obtain each value: see publishToMaven/SIMPLE.md

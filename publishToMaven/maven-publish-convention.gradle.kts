@@ -1,8 +1,18 @@
 /**
- * Copy this folder next to your project root `settings.gradle.kts`, then in root `build.gradle.kts`:
+ * Reference copy of the Maven publish convention.
  *
- *   plugins { id("com.vanniktech.maven.publish") version "0.36.0" apply false }
+ * **ToastX:** The active configuration is **inlined in the root `build.gradle.kts`** (after the
+ * `publishSecretsFile` block). Do not add `apply(from = ...)` for this file when the root already
+ * uses `plugins { id("com.vanniktech.maven.publish") ... apply false }`: Gradle would load the
+ * plugin on two classpaths and `configure<MavenPublishBaseExtension>` fails at runtime.
+ *
+ * For a fresh project without that conflict, you can use:
+ *
+ *   plugins { id("com.vanniktech.maven.publish") version "0.35.0" apply false }
  *   apply(from = rootProject.file("publishToMaven/maven-publish-convention.gradle.kts"))
+ *
+ * and paste the `subprojects { ... }` block from root `build.gradle.kts` into this file (without
+ * the `inceptionYear` name clash — use one variable name for the POM year).
  *
  * Set `MAVEN_PUBLISH_*` in `gradle.properties` — see `gradle.properties.example` and `README.md`.
  */
@@ -54,12 +64,10 @@ val scmDevConnection = providers.gradleProperty("MAVEN_PUBLISH_SCM_DEV_CONNECTIO
 val inceptionYear = providers.gradleProperty("MAVEN_PUBLISH_INCEPTION_YEAR").orElse("2025").get()
 
 val folderRepoRelative = providers.gradleProperty("MAVEN_PUBLISH_FOLDER_REPO").orElse("build/maven-repo").get()
-val useMavenCentral =
-    providers.gradleProperty("MAVEN_PUBLISH_MAVEN_CENTRAL").orElse("false").get().toBoolean()
-val centralAutoRelease =
-    providers.gradleProperty("MAVEN_PUBLISH_CENTRAL_AUTO_RELEASE").orElse("true").get().toBoolean()
 val useSigning =
     providers.gradleProperty("MAVEN_PUBLISH_SIGNING").orElse("true").get().toBoolean()
+val mavenArtifactIdOverride =
+    providers.gradleProperty("MAVEN_PUBLISH_ARTIFACT_ID").orElse("").get()
 
 subprojects {
     if (moduleNames.isEmpty() || name !in moduleNames) {
@@ -72,17 +80,17 @@ subprojects {
     plugins.apply("com.vanniktech.maven.publish")
 
     afterEvaluate {
+        val mavenArtifactId = mavenArtifactIdOverride.ifBlank { project.name }
         extensions.configure<MavenPublishBaseExtension>("mavenPublishing") {
-            coordinates(publishGroup, project.name, publishVersion)
-            if (useMavenCentral) {
-                publishToMavenCentral(automaticRelease = centralAutoRelease)
-            }
+            coordinates(publishGroup, mavenArtifactId, publishVersion)
+            // Central: pass -PSONATYPE_HOST=CENTRAL_PORTAL (and SONATYPE_AUTOMATIC_RELEASE); do not
+            // also call publishToMavenCentral() here — vanniktech configures it and a second call fails.
             if (useSigning) {
                 signAllPublications()
             }
             pom {
-                name.set("$pomName: ${project.name}")
-                description.set("$pomDescription — ${project.name}")
+                name.set("$pomName: $mavenArtifactId")
+                description.set("$pomDescription — $mavenArtifactId")
                 inceptionYear.set(inceptionYear)
                 url.set(pomUrl)
                 licenses {
